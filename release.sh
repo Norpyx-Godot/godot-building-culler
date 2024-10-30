@@ -21,11 +21,15 @@ echo "Pre/RC: $pre_rc"
 echo "Pre/RC Index: $pre_index"
 echo "Pre/RC Type: $pre_type"
 
+echo "---"
+
 bump_type=$(echo $1 | grep -oP '(major|minor|patch|bump)')
 new_pre_type=$(echo $1 | grep -oP '(pre|rc)')
 
 echo "Bump type: $bump_type"
 echo "New Pre/RC Type: '$new_pre_type'"
+
+echo "---"
 
 # Increment version switch case
 case "$bump_type" in
@@ -58,33 +62,65 @@ if [[ "$new_pre_type" != "" ]]; then
 	new_version="$new_version$pre_rc"
 fi
 
-# Update version in plugin.cfg
-echo sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" plugin.cfg
-
 # Version Info
 echo "New version: $new_version"
+
+echo "---"
+
+# Update version in plugin.cfg
+echo sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" plugin.cfg
 
 # Commit changes
 echo git add plugin.cfg
 echo git commit -m "Release $new_version"
 echo git tag -a $new_version -m "Release $new_version"
-echo git push origin main --tags
+
+echo "---"
+echo "Populating build directory"
 
 # Build and deploy
 build_dir="build/addons/building_culler"
-files=(assets nodes building_culler.gd LICENSE.md plugin.cfg README.md)
+
+rm -rf $build_dir
 mkdir -p $build_dir
+
+cp_code=0
+files=(assets nodes building_culler.gd LICENSE plugin.cfg README.md)
 for file in "${files[@]}"; do
 	if [ -d $file ]; then
 		echo "Copying directory '$file'"
-		cp -r $file $dest
+		cp -r $file $build_dir
+		cp_code=$?
 	elif [ -f $file ]; then
 		echo "Copying file '$file'"
-		cp $file $dest
+		cp $file $build_dir
+		cp_code=$?
+	fi
+
+	if [ $cp_code -ne 0 ] || [ ! -f $file ] && [ ! -d $file ]; then
+		echo "Failed to copy '$file'"
+		exit 1
 	fi
 done
 
+echo "---"
+
 echo "Building release"
 dist_dir="dist"
-tar -czf "$dist_dir/building_culler-$new_version.tar.gz" -C $build_dir .
+mkdir -p $dist_dir
+tar_file="$dist_dir/building_culler-$new_version.tar.gz"
+tar -czf $tar_file -C $build_dir .
+if [ -f $tar_file ]; then
+	echo "Release built: $tar_file"
+else
+	echo "Failed to build release"
+	exit 1
+fi
+
+echo "---\n\n"
+echo "When you are ready to release, run the following commands:"
+echo "    git push origin main --tags"
+echo "\nDon't forget to upload the release tarball to the Godot Asset Library,"
+echo "and to the Github release page:"
+echo "    $tar_file"
 

@@ -14,6 +14,7 @@ var BuildingLevelCollider = preload("./building_level_collider.gd")
 ## A useful property for associating the collider with the parent building
 @export var parent_building: Building
 
+## A useful property for tracking the interior of the level
 @export var level_interior: BuildingLevelInterior
 
 var prev_visibility: bool
