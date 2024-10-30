@@ -68,12 +68,12 @@ echo "New version: $new_version"
 echo "---"
 
 # Update version in plugin.cfg
-echo sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" plugin.cfg
+sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" plugin.cfg
 
 # Commit changes
-echo git add plugin.cfg
-echo git commit -m "Release $new_version"
-echo git tag -a $new_version -m "Release $new_version"
+git add plugin.cfg
+git commit -m "Release $new_version"
+git tag -a $new_version -m "Release $new_version"
 
 echo "---"
 echo "Populating build directory"
@@ -109,7 +109,7 @@ echo "Building release"
 dist_dir="dist"
 mkdir -p $dist_dir
 tar_file="$dist_dir/building_culler-$new_version.tar.gz"
-tar -czf $tar_file -C $build_dir .
+tar -czf $tar_file -C build/ .
 if [ -f $tar_file ]; then
 	echo "Release built: $tar_file"
 else
@@ -117,10 +117,10 @@ else
 	exit 1
 fi
 
-echo "---\n\n"
+echo -e "---\n\n"
 echo "When you are ready to release, run the following commands:"
 echo "    git push origin main --tags"
-echo "\nDon't forget to upload the release tarball to the Godot Asset Library,"
+echo -e "\nDon't forget to upload the release tarball to the Godot Asset Library,"
 echo "and to the Github release page:"
 echo "    $tar_file"
 
