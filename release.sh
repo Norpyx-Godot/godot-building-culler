@@ -79,21 +79,22 @@ echo "---"
 echo "Populating build directory"
 
 # Build and deploy
-build_dir="build/addons/building_culler"
+build_dir="build"
+dest_dir="$build_dir/addons/building_culler"
 
 rm -rf $build_dir
-mkdir -p $build_dir
+mkdir -p $dest_dir
 
 cp_code=0
 files=(assets nodes building_culler.gd LICENSE plugin.cfg README.md)
 for file in "${files[@]}"; do
 	if [ -d $file ]; then
 		echo "Copying directory '$file'"
-		cp -r $file $build_dir
+		cp -r $file $dest_dir
 		cp_code=$?
 	elif [ -f $file ]; then
 		echo "Copying file '$file'"
-		cp $file $build_dir
+		cp $file $dest_dir
 		cp_code=$?
 	fi
 
@@ -109,9 +110,15 @@ echo "Building release"
 dist_dir="dist"
 mkdir -p $dist_dir
 tar_file="$dist_dir/building_culler-$new_version.tar.gz"
+zip_file="$dist_dir/building_culler-$new_version.zip"
 tar -czf $tar_file -C build/ .
+pushd $build_dir > /dev/null 2>&1
+zip -r ../$zip_file addons/
+popd > /dev/null 2>&1
 if [ -f $tar_file ]; then
-	echo "Release built: $tar_file"
+	echo "Release built:"
+	echo "    $tar_file"
+	echo "    $zip_file"
 else
 	echo "Failed to build release"
 	exit 1
@@ -123,4 +130,7 @@ echo "    git push origin main --tags"
 echo -e "\nDon't forget to upload the release tarball to the Godot Asset Library,"
 echo "and to the Github release page:"
 echo "    $tar_file"
+echo "    $zip_file"
+echo "    $dist_dir/icon.png"
+echo "    $dist_dir/screenshot.png"
 
